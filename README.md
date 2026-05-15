@@ -1,6 +1,6 @@
 # Leigod Plugin — SteamDeck 网络加速器 | 通用 Linux 移植版
 
-[雷神加速器](https://www.leigod.com) 的 SteamDeck 插件，修改后可在 **任意 x86_64 Linux 发行版**（Ubuntu / Debian / Fedora / Arch / openSUSE 等）上运行。伪装为 SteamDeck 硬件，通过手机 App 绑定后即可对游戏进行网络加速。
+[雷神加速器](https://www.leigod.com) 的 SteamDeck 插件，伪装后可在 **任意 x86_64 Linux 发行版**（Ubuntu / Debian / Fedora / Arch / openSUSE 等）上运行。伪装为 SteamDeck 硬件，通过手机 App 绑定后即可对游戏进行网络加速。
 
 ## 原理
 
@@ -11,6 +11,8 @@
 | **网卡伪装** | 创建 `dummy` 类型虚拟 `wlan0`，克隆物理网卡 MAC |
 | **路径修复** | `/home/leigod` → `/opt/leigod` 符号链接 |
 | **进程管理** | systemd `KillMode=control-group` 确保重启时清理所有子进程 |
+
+> **本项目的技术定位：** 仅通过 systemd 的 `BindReadOnlyPaths` 和网络层配置（创建 dummy 接口）在**外部模拟** SteamDeck 运行环境。未对雷神核心二进制（`acc-gw.router.amd64`）进行任何逆向分析、修改或破解。
 
 ## 系统要求
 
@@ -119,4 +121,8 @@ MAC 地址回退到 `/etc/machine-id` 派生值，只要系统未重装则不变
 
 ## 免责声明
 
-本项目仅供学习研究。雷神加速器是其各自所有者的商标。请遵守当地法律法规。
+本仓库**不含**雷神官方二进制文件，也未对雷神核心程序进行任何逆向分析、修改或破解。所有脚本仅通过 systemd 的 `BindReadOnlyPaths` 和网络层配置（创建 dummy 接口）在**外部模拟** SteamDeck 运行环境，使未修改的雷神官方二进制在普通 PC 上正常运行。
+
+`acc-gw.router.amd64` 和 `ipdatacloud_country.xdb` 由安装/构建脚本直接从雷神官方服务器下载，版权归雷神所有。使用雷神服务需遵守其服务条款。
+
+本项目仅供学习研究。请遵守当地法律法规。
