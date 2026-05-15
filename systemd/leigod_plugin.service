@@ -1,0 +1,15 @@
+[Unit]
+Description=Leigod Plugin Service
+Wants=network-online.target
+After=network.target network-online.target
+
+[Service]
+ExecStart=/opt/leigod/steamdeck_acc_monitor.sh
+KillMode=control-group
+Restart=always
+RestartSec=3
+BindReadOnlyPaths=/opt/leigod/fake_product_name:/sys/class/dmi/id/product_name
+BindReadOnlyPaths=/opt/leigod/fake_os-release:/etc/os-release
+
+[Install]
+WantedBy=default.target

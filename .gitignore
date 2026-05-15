@@ -1,0 +1,16 @@
+# Build artifacts
+packages/*.deb
+packages/*.tar.gz
+*.deb
+*.tar.gz
+
+# Temp files
+/tmp/
+/tmp/acc/
+
+# Editor backups
+*~
+*.swp
+*.swo
+\#*\#
+.\#*

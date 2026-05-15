@@ -1,0 +1,64 @@
+#!/bin/sh
+set -e
+
+BASE="/opt/leigod"
+SERVICE_FILE="/etc/systemd/system/leigod_plugin.service"
+
+case "$1" in
+    configure)
+        if [ -d /home/leigod ] && [ ! -L /home/leigod ]; then
+            if rmdir /home/leigod 2>/dev/null; then
+                echo "Removed empty directory /home/leigod"
+            else
+                echo "Warning: /home/leigod is a non-empty directory. Please move it manually."
+            fi
+        fi
+
+        if [ ! -L /home/leigod ]; then
+            ln -sf "$BASE" /home/leigod
+            echo "Created symlink /home/leigod -> $BASE"
+        fi
+
+        cat > "$SERVICE_FILE" << 'EOF'
+[Unit]
+Description=Leigod Plugin Service
+Wants=network-online.target
+After=network.target network-online.target
+
+[Service]
+ExecStart=/opt/leigod/steamdeck_acc_monitor.sh
+KillMode=control-group
+Restart=always
+RestartSec=3
+BindReadOnlyPaths=/opt/leigod/fake_product_name:/sys/class/dmi/id/product_name
+BindReadOnlyPaths=/opt/leigod/fake_os-release:/etc/os-release
+
+[Install]
+WantedBy=default.target
+EOF
+
+        systemctl daemon-reload
+        systemctl enable leigod_plugin.service
+        systemctl start leigod_plugin.service
+
+        echo ""
+        echo "============================================"
+        echo " Leigod Plugin installed successfully!"
+        echo "============================================"
+        echo " Next steps:"
+        echo "   1. Open the Leigod mobile app"
+        echo "   2. Bind the device (scan QR code)"
+        echo "   3. Start acceleration"
+        echo ""
+        ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+        ;;
+
+    *)
+        echo "postinst called with unknown argument: $1" >&2
+        exit 1
+        ;;
+esac
+
+exit 0

@@ -1,0 +1,11 @@
+Package: leigod-plugin
+Version: 1.2.2.15
+Section: net
+Priority: optional
+Architecture: amd64
+Depends: ipset, curl
+Maintainer: Leigod Plugin Packager
+Description: Leigod network accelerator plugin (SteamDeck variant for Ubuntu)
+ Modified to run on standard Ubuntu systems by spoofing SteamDeck
+ hardware identification. Provides network acceleration for gaming
+ via the Leigod mobile app.
