@@ -49,11 +49,23 @@ install_deps() {
     info "Dependencies installed."
 }
 
+download_binaries() {
+    local base_url="http://119.3.40.126"
+    info "Downloading Leigod binary from $base_url/acc-gw.router.amd64..."
+    curl -# -o "$BASE/acc-gw.router.amd64" "$base_url/acc-gw.router.amd64" || \
+        error "Failed to download acc-gw.router.amd64"
+    cp "$BASE/acc-gw.router.amd64" "$BASE/acc_upgrade_monitor"
+    info "Downloading IP database..."
+    curl -# -o "$BASE/config/ipdatacloud_country.xdb" "$base_url/ipdatacloud_country.xdb" || \
+        error "Failed to download ipdatacloud_country.xdb"
+    chmod 755 "$BASE/acc-gw.router.amd64" "$BASE/acc_upgrade_monitor"
+    info "Binaries downloaded."
+}
+
 install_files() {
     info "Installing files to $BASE..."
     mkdir -p "$BASE/config"
     cp -r "$SCRIPT_DIR/opt/leigod/"* "$BASE/"
-    chmod 755 "$BASE/acc-gw.router.amd64" "$BASE/acc_upgrade_monitor"
     chmod 755 "$BASE/steamdeck_acc_monitor.sh" "$BASE/leigod_uninstall.sh"
     info "Files installed."
 }
@@ -124,4 +136,4 @@ print_summary() {
 }
 
 echo ""; echo "Leigod Plugin v$VERSION Installer"; echo "============================================"; echo ""
-detect_pkg_manager; install_deps; install_files; create_symlink; setup_service; start_service; print_summary
+detect_pkg_manager; install_deps; install_files; download_binaries; create_symlink; setup_service; start_service; print_summary

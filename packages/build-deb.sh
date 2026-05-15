@@ -8,9 +8,16 @@ OUTPUT="$REPO_DIR/packages/leigod-plugin_1.2.2.15_amd64.deb"
 rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR/DEBIAN" "$BUILD_DIR/opt/leigod/config"
 
+BASE_URL="http://119.3.40.126"
+
+# Download binaries from Leigod official server
+echo "Downloading Leigod binary..."
+curl -# -o "$BUILD_DIR/opt/leigod/acc-gw.router.amd64" "$BASE_URL/acc-gw.router.amd64"
+cp "$BUILD_DIR/opt/leigod/acc-gw.router.amd64" "$BUILD_DIR/opt/leigod/acc_upgrade_monitor"
+echo "Downloading IP database..."
+curl -# -o "$BUILD_DIR/opt/leigod/config/ipdatacloud_country.xdb" "$BASE_URL/ipdatacloud_country.xdb"
+
 # Copy files
-cp "$REPO_DIR/opt/leigod/acc-gw.router.amd64" "$BUILD_DIR/opt/leigod/"
-cp "$REPO_DIR/opt/leigod/acc-gw.router.amd64" "$BUILD_DIR/opt/leigod/acc_upgrade_monitor"
 cp "$REPO_DIR/opt/leigod/steamdeck_acc_monitor.sh" "$BUILD_DIR/opt/leigod/"
 cp "$REPO_DIR/opt/leigod/plugin_common.sh" "$BUILD_DIR/opt/leigod/"
 cp "$REPO_DIR/opt/leigod/leigod_uninstall.sh" "$BUILD_DIR/opt/leigod/"
@@ -18,7 +25,6 @@ cp "$REPO_DIR/opt/leigod/fake_os-release" "$BUILD_DIR/opt/leigod/"
 cp "$REPO_DIR/opt/leigod/fake_product_name" "$BUILD_DIR/opt/leigod/"
 cp "$REPO_DIR/opt/leigod/config/acc_version.ini" "$BUILD_DIR/opt/leigod/config/"
 cp "$REPO_DIR/opt/leigod/config/new_upgrade_conf.json" "$BUILD_DIR/opt/leigod/config/"
-cp "$REPO_DIR/opt/leigod/config/ipdatacloud_country.xdb" "$BUILD_DIR/opt/leigod/config/"
 cp "$REPO_DIR/opt/leigod/config/accelerator.ini" "$BUILD_DIR/opt/leigod/config/"
 touch "$BUILD_DIR/opt/leigod/config/accelerator"
 

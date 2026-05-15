@@ -1,3 +1,7 @@
+# Downloaded binaries (not tracked in git, downloaded at install/build time)
+acc-gw.router.*
+ipdatacloud_country.xdb
+
 # Build artifacts
 packages/*.deb
 packages/*.tar.gz
