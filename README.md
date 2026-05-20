@@ -126,3 +126,7 @@ MAC 地址回退到 `/etc/machine-id` 派生值，只要系统未重装则不变
 `acc-gw.router.amd64` 和 `ipdatacloud_country.xdb` 由安装/构建脚本直接从雷神官方服务器下载，版权归雷神所有。使用雷神服务需遵守其服务条款。
 
 本项目仅供学习研究。请遵守当地法律法规。
+
+## 友链
+
+- [LINUX DO](https://linux.do) - 友好的科技前沿爱好者社区
