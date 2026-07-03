@@ -11,15 +11,19 @@ info()  { printf "${GREEN}[INFO]${NC} %s\n" "$*"; }
 warn()  { printf "${YELLOW}[WARN]${NC} %s\n" "$*"; }
 error() { printf "${RED}[ERROR]${NC} %s\n" "$*"; exit 1; }
 
+# ── root 检查 ──
 if [ "$(id -u)" -ne 0 ]; then error "Please run as root (sudo bash install_bazzite.sh)"; fi
 
+# ── 架构检查 ──
 ARCH=$(uname -m)
 if [ "$ARCH" != "x86_64" ]; then error "Only x86_64 supported, current: $ARCH"; fi
 
+# ── systemd 检查 ──
 if ! command -v systemctl >/dev/null 2>&1; then
     error "systemd not found. This package requires systemd."
 fi
 
+# ── 检测是否是 Bazzite / Fedora Atomic ──
 IS_ATOMIC=false
 if grep -qi "bazzite" /etc/os-release 2>/dev/null || \
    grep -qi "fedora.*atomic" /etc/os-release 2>/dev/null || \
@@ -28,18 +32,22 @@ if grep -qi "bazzite" /etc/os-release 2>/dev/null || \
     info "Detected Bazzite/Fedora Atomic system"
 fi
 
+# ── 检测包管理器 ──
 detect_pkg_manager() {
     if [ "$IS_ATOMIC" = true ]; then
+        # Atomic 系统：优先检查 ipset 和 curl 是否已装
         if command -v ipset >/dev/null 2>&1 && command -v curl >/dev/null 2>&1; then
             info "ipset and curl already available, skipping package install"
             PKG_MANAGER="none"
             return
         fi
+        # 检查 rpm-ostree 是否可用
         if command -v rpm-ostree >/dev/null 2>&1; then
             PKG_MANAGER="rpm-ostree"
             info "Using rpm-ostree (Bazzite Atomic)"
             return
         fi
+        # 退回到 dnf
         if command -v dnf >/dev/null 2>&1; then
             PKG_MANAGER="dnf-atomic"
             info "Using dnf (fallback on Atomic)"
@@ -48,6 +56,7 @@ detect_pkg_manager() {
         error "No package manager found on Atomic system"
     fi
 
+    # 非 Atomic 系统：走原版检测
     if command -v apt >/dev/null 2>&1; then
         PKG_MANAGER="apt"; PKG_INSTALL="apt install -y"; PKG_UPDATE="apt update"
     elif command -v dnf >/dev/null 2>&1; then
@@ -67,9 +76,12 @@ detect_pkg_manager() {
     info "Detected package manager: $PKG_MANAGER"
 }
 
+# ── 安装依赖 ──
 install_deps() {
     case "$PKG_MANAGER" in
-        none) ;;
+        none)
+            # 已经可用了
+            ;;
         rpm-ostree)
             info "Installing dependencies via rpm-ostree..."
             DEPS=""
@@ -102,6 +114,7 @@ install_deps() {
     esac
 }
 
+# ── 下载二进制文件 ──
 download_binaries() {
     local base_url="http://119.3.40.126"
     info "Downloading Leigod binary from $base_url/acc-gw.router.amd64..."
@@ -115,14 +128,34 @@ download_binaries() {
     info "Binaries downloaded."
 }
 
+# ── 复制文件 ──
 install_files() {
     info "Installing files to $BASE..."
     mkdir -p "$BASE/config"
-    cp -r "$SCRIPT_DIR/opt/leigod/"* "$BASE/"
+
+    if [ -d "$SCRIPT_DIR/opt/leigod" ]; then
+        # 本地文件模式（git clone 方式）
+        cp -r "$SCRIPT_DIR/opt/leigod/"* "$BASE/"
+    else
+        # curl|bash 模式 — 从 GitHub raw 下载辅助脚本
+        local RAW_BASE="https://raw.githubusercontent.com/Xiyinnnnnn/leigod-plugin-linux-for-bazzite/main/opt/leigod"
+        info "Downloading helper scripts from $RAW_BASE ..."
+
+        curl -# -o "$BASE/steamdeck_acc_monitor.sh" "$RAW_BASE/steamdeck_acc_monitor.sh" || \
+            error "Failed to download steamdeck_acc_monitor.sh"
+        curl -# -o "$BASE/leigod_uninstall.sh"      "$RAW_BASE/leigod_uninstall.sh"      || \
+            error "Failed to download leigod_uninstall.sh"
+
+        # 如果 opt/leigod/ 下还有其他文件，逐行添加 curl 下载
+        # 例如 config 目录中的默认配置：
+        # curl -# -o "$BASE/config/some_config.ini" "$RAW_BASE/config/some_config.ini" || true
+    fi
+
     chmod 755 "$BASE/steamdeck_acc_monitor.sh" "$BASE/leigod_uninstall.sh"
     info "Files installed."
 }
 
+# ── 创建符号链接 ──
 create_symlink() {
     if [ -d /home/leigod ] && [ ! -L /home/leigod ]; then
         if rmdir /home/leigod 2>/dev/null; then
@@ -137,6 +170,7 @@ create_symlink() {
     fi
 }
 
+# ── 创建 systemd 服务 ──
 setup_service() {
     info "Creating systemd service..."
     cat > "$SERVICE_FILE" << 'SERVICEEOF'
@@ -161,6 +195,7 @@ SERVICEEOF
     info "Service enabled (will auto-start on boot)."
 }
 
+# ── 启动服务 ──
 start_service() {
     info "Starting Leigod Plugin Service..."
     systemctl start leigod_plugin.service 2>/dev/null || true
@@ -172,6 +207,7 @@ start_service() {
     fi
 }
 
+# ── 打印总结 ──
 print_summary() {
     echo ""
     echo "============================================"
@@ -188,6 +224,9 @@ print_summary() {
     echo ""
 }
 
+# ════════════════════════════════════════════
+#  主流程
+# ════════════════════════════════════════════
 echo ""
 echo "Leigod Plugin v$VERSION Installer (Bazzite Edition)"
 echo "============================================"
@@ -195,6 +234,8 @@ echo ""
 
 detect_pkg_manager
 install_deps
+
+# 如果装完依赖重启了，第二次运行会从下面继续
 install_files
 download_binaries
 create_symlink
